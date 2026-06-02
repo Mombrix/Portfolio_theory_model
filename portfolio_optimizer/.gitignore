@@ -1,0 +1,11 @@
+data/*.csv
+data/*.pkl
+results/*.png
+results/*.csv
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.env
+*.egg-info/
+dist/
+build/
