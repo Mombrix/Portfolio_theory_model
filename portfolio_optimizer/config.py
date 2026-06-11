@@ -58,10 +58,26 @@ MU_METHOD = "historical"    # 'historical' | 'capm' | 'black_litterman'
 # ─────────────────────────────────────────────
 MIN_WEIGHT  = 0.00   # No short selling
 MAX_WEIGHT  = 0.40   # Max 40% on any single asset (concentration limit)
-TURNOVER_MAX = None  # Optional: max sum(|w_new - w_old|), e.g. 0.30
+MIN_WEIGHT_IF_NONZERO = 0.05  # If asset is included, min 5% position
 
 # CVaR parameters
 CVAR_ALPHA  = 0.05   # Confidence level: losses in worst 5% of scenarios
+
+# Budget
+BUDGET_EUR = 10_000 # Total capital to invest in EUR
+
+# Class exposure limits
+MAX_EQUITY = 0.60  # Max 60% in equities
+MAX_BONDS  = 0.60  # Max 60% in bonds
+MAX_ALTS   = 0.40  # Max 40% in alternatives
+
+# Risk constraints
+MAX_VOL = 0.15       # Max portfolio volatility (15% annualized)
+TURNOVER_MAX = None # Max turnover (e.g., 0.5 for 50%) — set to None for no limit
+
+EQUITY_TICKERS = ["SPY", "EZU", "EEM"]
+BOND_TICKERS   = ["TLT", "LQD", "EMB"]
+ALT_TICKERS    = ["GLD", "GSG"]
 
 # ─────────────────────────────────────────────
 # BLACK-LITTERMAN PARAMETERS

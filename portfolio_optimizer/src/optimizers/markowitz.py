@@ -49,6 +49,14 @@ def _solve_qp(
     risk_free_rate: float = 0.0,
     w_prev: np.ndarray | None = None,
     turnover_max: float | None = None,
+    # Nuovi parametri
+    equity_idx: list | None = None,
+    bond_idx: list | None = None,
+    alt_idx: list | None = None,
+    max_equity: float = 1.0,
+    max_bonds: float = 1.0,
+    max_alts: float = 1.0,
+    max_vol: float | None = None,
 ) -> np.ndarray:
     """
     Core QP solver using CVXPY.
@@ -76,6 +84,22 @@ def _solve_qp(
     if turnover_max is not None and w_prev is not None:
         constraints.append(cp.norm(w - w_prev, 1) <= turnover_max)
 
+    # Class exposure constraints (if tickers are provided)
+    if equity_idx is not None:
+        constraints.append(cp.sum(w[equity_idx]) <= max_equity)
+
+    if bond_idx is not None:
+        constraints.append(cp.sum(w[bond_idx]) <= max_bonds)
+
+    if alt_idx is not None:
+        constraints.append(cp.sum(w[alt_idx]) <= max_alts)
+
+    # Maximum volatility constrain 
+    if max_vol is not None:
+        constraints.append(port_variance <= max_vol**2)
+
+    
+
     # Objective
     if objective == "min_variance":
         obj = cp.Minimize(port_variance)
@@ -95,7 +119,7 @@ def _solve_qp(
         ]
         obj = cp.Minimize(cp.quad_form(y, Sigma))
         prob = cp.Problem(obj, constraints_sharpe)
-        prob.solve(solver=cp.OSQP, warm_starting=True, max_iter=10000)
+        prob.solve(solver=cp.CLARABEL)
         if prob.status not in ["optimal", "optimal_inaccurate"]:
             raise RuntimeError(f"Max Sharpe QP failed: {prob.status}")
         return y.value / kappa.value
@@ -108,7 +132,7 @@ def _solve_qp(
         raise ValueError(f"Unknown objective '{objective}'")
 
     prob = cp.Problem(obj, constraints)
-    prob.solve(solver=cp.OSQP, warm_starting=True, max_iter=10000)
+    prob.solve(solver=cp.CLARABEL)
 
     if prob.status not in ["optimal", "optimal_inaccurate"]:
         raise RuntimeError(f"QP optimization failed: {prob.status}")
@@ -122,6 +146,14 @@ def minimum_variance(
     risk_free_rate: float = 0.043,
     min_weight: float = 0.0,
     max_weight: float = 1.0,
+    equity_idx: list | None = None,
+    bond_idx: list | None = None,
+    alt_idx: list | None = None,
+    max_equity: float = 1.0,
+    max_bonds: float = 1.0,
+    max_alts: float = 1.0,
+    max_vol: float | None = None,
+
 ) -> PortfolioResult:
     """
     Minimum Variance Portfolio — ignores expected returns entirely.
@@ -131,6 +163,9 @@ def minimum_variance(
         mu.values, cov.values, mu.index.tolist(),
         min_weight=min_weight, max_weight=max_weight,
         objective="min_variance",
+        equity_idx=equity_idx, bond_idx=bond_idx, alt_idx=alt_idx,
+        max_equity=max_equity, max_bonds=max_bonds, max_alts=max_alts,
+        max_vol=max_vol,
     )
     weights = pd.Series(w, index=mu.index)
     ret = float(weights @ mu)
@@ -145,6 +180,13 @@ def maximum_sharpe(
     risk_free_rate: float = 0.043,
     min_weight: float = 0.0,
     max_weight: float = 1.0,
+    equity_idx: list | None = None,
+    bond_idx: list | None = None,
+    alt_idx: list | None = None,
+    max_equity: float = 1.0,
+    max_bonds: float = 1.0,
+    max_alts: float = 1.0,
+    max_vol: float | None = None,
 ) -> PortfolioResult:
     """
     Tangency Portfolio — maximizes the Sharpe Ratio.
@@ -155,6 +197,9 @@ def maximum_sharpe(
         min_weight=min_weight, max_weight=max_weight,
         objective="max_sharpe",
         risk_free_rate=risk_free_rate,
+        equity_idx=equity_idx, bond_idx=bond_idx, alt_idx=alt_idx,
+        max_equity=max_equity, max_bonds=max_bonds, max_alts=max_alts,
+        max_vol=max_vol,
     )
     weights = pd.Series(w, index=mu.index)
     ret = float(weights @ mu)
@@ -170,6 +215,13 @@ def maximum_utility(
     risk_free_rate: float = 0.043,
     min_weight: float = 0.0,
     max_weight: float = 1.0,
+    equity_idx: list | None = None,
+    bond_idx: list | None = None,
+    alt_idx: list | None = None,
+    max_equity: float = 1.0,
+    max_bonds: float = 1.0,
+    max_alts: float = 1.0,
+    max_vol: float | None = None,
 ) -> PortfolioResult:
     """
     Maximum Utility Portfolio for a given risk aversion A.
@@ -184,6 +236,9 @@ def maximum_utility(
         min_weight=min_weight, max_weight=max_weight,
         objective="max_utility",
         risk_aversion=risk_aversion,
+        equity_idx=equity_idx, bond_idx=bond_idx, alt_idx=alt_idx,
+        max_equity=max_equity, max_bonds=max_bonds, max_alts=max_alts,
+        max_vol=max_vol,
     )
     weights = pd.Series(w, index=mu.index)
     ret = float(weights @ mu)

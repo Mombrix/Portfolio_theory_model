@@ -73,7 +73,7 @@ def cvar_optimization(
         constraints.append(mu.values @ w >= min_return / freq)
 
     prob = cp.Problem(cp.Minimize(cvar_obj), constraints)
-    prob.solve(solver=cp.ECOS, warm_starting=True)
+    prob.solve(solver=cp.CLARABEL)
 
     if prob.status not in ["optimal", "optimal_inaccurate"]:
         raise RuntimeError(f"CVaR optimization failed: {prob.status}")
