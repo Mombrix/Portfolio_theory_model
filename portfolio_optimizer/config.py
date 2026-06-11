@@ -39,7 +39,7 @@ RISK_FREE_RATE_MONTHLY = RISK_FREE_RATE_ANNUAL / 12
 # ─────────────────────────────────────────────
 # Risk aversion coefficient A in U = E[r] - (A/2)*sigma^2
 # Conservative: 6-10 | Moderate: 3-6 | Aggressive: 1-3
-RISK_AVERSION = 4.0
+RISK_AVERSION = 3.5
 
 # ─────────────────────────────────────────────
 # COVARIANCE ESTIMATION
